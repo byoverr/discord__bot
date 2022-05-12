@@ -6,7 +6,7 @@ import random
 from weather_forecast import Weather
 from download_audio import download_audio
 import requests
-
+from discord_config import TOKEN
 
 class MyClient(discord.Client):
     def __init__(self):
@@ -25,15 +25,17 @@ class MyClient(discord.Client):
         self.clicked_next = False
         self.react_hints_mes_sp = []
         self.user_bot = None
+        self.result, self.file, self.name, self.duration, self.uploader, self.uploader_url, self.url, \
+        self.thumbnail = None, None, None, None, None, None, None, None
 
         self.room_activated = False
         self.room_channel = None
 
     async def on_reaction_add(self, reaction, user):
         if reaction.message == self.mes_music_control:
-            if user.name == 'proovie':
+            if user == self.user:
                 self.user_bot = user
-            if user.name != 'proovie':
+            if user != self.user:
                 if reaction.emoji == '\u2753':
                     await reaction.message.remove_reaction('\u2753', user)
                     await reaction.message.remove_reaction('\u2753', self.user_bot)
@@ -94,7 +96,7 @@ class MyClient(discord.Client):
                     self.voice_channels.append(channel)
 
     async def on_message(self, message):
-        if message.author != 'proovie#3996':
+        if message.author != self.user:
             if message.content.startswith('Пруви, команды'):
                 await message.channel.send('"привет", "как дела?", "создай канал", "удали канал",'
                                            ' "погода на сегодня/завтра <населённый пункт>", "отключись от меня"'
@@ -196,7 +198,7 @@ class MyClient(discord.Client):
                                 self.music_queue.append([url, message.author])
                                 with open('logs.txt', mode='a') as f:
                                     f.write(f'{message.author}  :  {url}\n')
-                                #self.mes_music_control = await message.channel.send(f'Сейчас играет {name}')
+                                # self.mes_music_control = await message.channel.send(f'Сейчас играет {name}')
                                 embed = (discord.Embed(title='Now playing',
                                                        description='```css\n{0.name}\n```'.format(self),
                                                        color=discord.Color.blurple())
@@ -207,17 +209,17 @@ class MyClient(discord.Client):
                                          .add_field(name='URL', value='[Click]({0.url})'.format(self))
                                          .set_thumbnail(url=self.thumbnail))
                                 self.mes_music_control = await message.channel.send(embed=embed)
-                                #await self.mes_music_control.pin()
-                                await self.mes_music_control.add_reaction('\u2753') # ?
+                                # await self.mes_music_control.pin()
+                                await self.mes_music_control.add_reaction('\u2753')  # ?
                                 await self.mes_music_control.add_reaction('\u25B6')  # play
-                                await self.mes_music_control.add_reaction('\u23F8') # pause
-                                await self.mes_music_control.add_reaction('\u23ED') # next
+                                await self.mes_music_control.add_reaction('\u23F8')  # pause
+                                await self.mes_music_control.add_reaction('\u23ED')  # next
                                 await self.mes_music_control.add_reaction('\u274C')  # X
                                 await self.play_audio()
                             else:
                                 await message.channel.send('✅ Добавлено в очередь')
                                 self.music_queue.append([url, message.author])
-                                await self.mes_music_control.edit\
+                                await self.mes_music_control.edit \
                                     (content=f'{self.mes_music_control.content[:-1]}{len(self.music_queue)}')
 
                 elif text.startswith('выключи'):
@@ -306,14 +308,14 @@ class MyClient(discord.Client):
                     f.write(f'{author}  :  {self.url}\n')
                 self.duration = parse_duration(int(duration))
                 new_embed = (discord.Embed(title='Now playing',
-                                       description='```css\n{0.name}\n```'.format(self),
-                                       color=discord.Color.blurple())
-                         .add_field(name='Duration', value=self.duration)
-                         .add_field(name='Requested by', value=author.mention)
-                         .add_field(name='Uploader',
-                                    value='[{0.uploader}]({0.uploader_url})'.format(self))
-                         .add_field(name='URL', value='[Click]({0.url})'.format(self))
-                .set_thumbnail(url=self.thumbnail))
+                                           description='```css\n{0.name}\n```'.format(self),
+                                           color=discord.Color.blurple())
+                             .add_field(name='Duration', value=self.duration)
+                             .add_field(name='Requested by', value=author.mention)
+                             .add_field(name='Uploader',
+                                        value='[{0.uploader}]({0.uploader_url})'.format(self))
+                             .add_field(name='URL', value='[Click]({0.url})'.format(self))
+                             .set_thumbnail(url=self.thumbnail))
                 await self.mes_music_control.edit(content=f'Треков в очереди: {len(self.music_queue)}')
                 await self.mes_music_control.edit(embed=new_embed)
                 self.voice_client.play(discord.FFmpegPCMAudio(
@@ -322,7 +324,7 @@ class MyClient(discord.Client):
             if self.clicked_next:
                 self.clicked_next = False
                 break
-        #await self.mes_music_control.delete()
+        # await self.mes_music_control.delete()
 
     def read_file(self, filename):
         with open(filename, mode='r', encoding='utf-8') as fl:
@@ -351,5 +353,6 @@ def parse_duration(duration: int):
 
     return ', '.join(duration)
 
+
 client = MyClient()
-client.run(token)
+client.run(TOKEN)

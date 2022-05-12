@@ -29,4 +29,4 @@ def download_audio(link):
         return True, file, title, duration, uploader, uploader_url, url, thumbnail
 
     except Exception:
-        return False, "Какая-то ошибка при воспроизведении", None, None, None, None, None
+        return False, "Какая-то ошибка при воспроизведении", None, None, None, None, None, None
